@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שעון עולמי</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.33/moment-timezone-with-data.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #search {
+            margin: 20px 0;
+            padding: 10px 15px;
+            width: 300px;
+            font-size: 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 25px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        #search:focus {
+            box-shadow: 0 0 5px var(--primary-color);
+        }
+        #clocks {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .clock {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 220px;
+            transition: all 0.3s ease;
+        }
+        .clock:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .city {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        .country {
+            font-size: 14px;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        .time {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            #clocks {
+                flex-direction: column;
+                align-items: center;
+            }
+            .clock {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>שעון עולמי</h1>
+    <input type="text" id="search" placeholder="חפש עיר או מדינה..." aria-label="חיפוש עיר או מדינה">
+    <div id="clocks"></div>
+
+    <script>
+        const allCities = [
+            { name: 'ירושלים', country: 'ישראל', timezone: 'Asia/Jerusalem' },
+            { name: 'לונדון', country: 'בריטניה', timezone: 'Europe/London' },
+            { name: 'פריז', country: 'צרפת', timezone: 'Europe/Paris' },
+            { name: 'ניו יורק', country: 'ארצות הברית', timezone: 'America/New_York' },
+            { name: 'טשקנט', country: 'אוזבקיסטן', timezone: 'Asia/Tashkent' },
+            { name: 'באקו', country: 'אזרביג\'אן', timezone: 'Asia/Baku' },
+            { name: 'אבו דאבי', country: 'איחוד האמירויות הערביות', timezone: 'Asia/Dubai' },
+            { name: 'ג\'קרטה', country: 'אינדונזיה', timezone: 'Asia/Jakarta' },
+            { name: 'טהרן', country: 'איראן', timezone: 'Asia/Tehran' },
+            { name: 'קאבול', country: 'אפגניסטן', timezone: 'Asia/Kabul' },
+            { name: 'ירבאן', country: 'ארמניה', timezone: 'Asia/Yerevan' },
+            { name: 'תימפו', country: 'בהוטאן', timezone: 'Asia/Thimphu' },
+            { name: 'מנאמה', country: 'בחריין', timezone: 'Asia/Bahrain' },
+            { name: 'דאקה', country: 'בנגלדש', timezone: 'Asia/Dhaka' },
+            { name: 'בנדר-סרי-בגוואן', country: 'ברוניי', timezone: 'Asia/Brunei' },
+            { name: 'טביליסי', country: 'ג\'ורג\'יה', timezone: 'Asia/Tbilisi' },
+            { name: 'סיאול', country: 'דרום קוריאה', timezone: 'Asia/Seoul' },
+            { name: 'מאלה', country: 'האיים המלדיביים', timezone: 'Indian/Maldives' },
+            { name: 'ניו דלהי', country: 'הודו', timezone: 'Asia/Kolkata' },
+            { name: 'האנוי', country: 'וייטנאם', timezone: 'Asia/Ho_Chi_Minh' },
+            { name: 'דושנבה', country: 'טג\'יקיסטן', timezone: 'Asia/Dushanbe' },
+            { name: 'אנקרה', country: 'טורקיה', timezone: 'Europe/Istanbul' },
+            { name: 'אשגאבט', country: 'טורקמניסטן', timezone: 'Asia/Ashgabat' },
+            { name: 'דילי', country: 'טימור-לסטה', timezone: 'Asia/Dili' },
+            { name: 'טוקיו', country: 'יפן', timezone: 'Asia/Tokyo' },
+            { name: 'עמן', country: 'ירדן', timezone: 'Asia/Amman' },
+            { name: 'כווית', country: 'כווית', timezone: 'Asia/Kuwait' },
+            { name: 'ויינטיאן', country: 'לאוס', timezone: 'Asia/Vientiane' },
+            { name: 'ביירות', country: 'לבנון', timezone: 'Asia/Beirut' },
+            { name: 'אולאנבאטאר', country: 'מונגוליה', timezone: 'Asia/Ulaanbaatar' },
+            { name: 'נייפידאו', country: 'מיאנמר', timezone: 'Asia/Yangon' },
+            { name: 'קואלה-לומפור', country: 'מלזיה', timezone: 'Asia/Kuala_Lumpur' },
+            { name: 'קטמנדו', country: 'נפאל', timezone: 'Asia/Kathmandu' },
+            { name: 'דמשק', country: 'סוריה', timezone: 'Asia/Damascus' },
+            { name: 'בייג\'ינג', country: 'סין', timezone: 'Asia/Shanghai' },
+            { name: 'סינגפור', country: 'סינגפור', timezone: 'Asia/Singapore' },
+            { name: 'ריאד', country: 'סעודיה', timezone: 'Asia/Riyadh' },
+            { name: 'סרי ג\'ייוורדנפורה-קוטה', country: 'סרי לנקה', timezone: 'Asia/Colombo' },
+            { name: 'מוסקט', country: 'עומן', timezone: 'Asia/Muscat' },
+            { name: 'בגדאד', country: 'עיראק', timezone: 'Asia/Baghdad' },
+            { name: 'מנילה', country: 'פיליפינים', timezone: 'Asia/Manila' },
+            { name: 'איסלמבאד', country: 'פקיסטן', timezone: 'Asia/Karachi' },
+            { name: 'פיונגיאנג', country: 'צפון קוריאה', timezone: 'Asia/Pyongyang' },
+            { name: 'נור סולטן', country: 'קזחסטן', timezone: 'Asia/Almaty' },
+            { name: 'דוחא', country: 'קטאר', timezone: 'Asia/Qatar' },
+            { name: 'בישקק', country: 'קירגיזסטן', timezone: 'Asia/Bishkek' },
+            { name: 'פנום-פן', country: 'קמבודיה', timezone: 'Asia/Phnom_Penh' },
+            { name: 'בנגקוק', country: 'תאילנד', timezone: 'Asia/Bangkok' },
+            { name: 'צנעא', country: 'תימן', timezone: 'Asia/Aden' }
+        ];
+
+        function createClock(city) {
+            const clockDiv = document.createElement('div');
+            clockDiv.className = 'clock';
+            clockDiv.innerHTML = `
+                <div class="city">${city.name}</div>
+                <div class="country">${city.country}</div>
+                <div class="time"></div>
+            `;
+            return clockDiv;
+        }
+
+        function updateTime(clockDiv, timezone) {
+            const timeDiv = clockDiv.querySelector('.time');
+            timeDiv.textContent = moment().tz(timezone).format('HH:mm:ss');
+        }
+
+        function displayClocks(cities) {
+            const clocksDiv = document.getElementById('clocks');
+            clocksDiv.innerHTML = '';
+            cities.forEach(city => {
+                const clockDiv = createClock(city);
+                clocksDiv.appendChild(clockDiv);
+                setInterval(() => updateTime(clockDiv, city.timezone), 1000);
+            });
+        }
+
+        const searchInput = document.getElementById('search');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredCities = allCities.filter(city => 
+                city.name.toLowerCase().includes(searchTerm) ||
+                city.country.toLowerCase().includes(searchTerm)
+            );
+            displayClocks(filteredCities);
+        });
+
+        // הצג את כל הערים כברירת מחדל
+        displayClocks(allCities);
+    </script>
+</body>
+</html>
